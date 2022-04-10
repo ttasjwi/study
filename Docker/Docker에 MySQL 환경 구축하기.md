@@ -66,3 +66,59 @@ root@410ca2fa6632:/# locale
 </details>
 
 ---
+
+## 3. Docker 명령으로 MySQL 컨테이너 실행
+- 앞에서 만든 이미지를 바탕으로 여러가지 환경변수 설정, 기본설정 등을 덧붙여 docker 컨테이너를 실행해야한다.
+- 기본적으로 컨테이너를 실행하는 명령어는 run인데 컨테이너 하나 띄우기 위해 많은 옵션값을 덧붙여야한다.
+- 이를 간편하게 하기 위해 `docker-compose.yml` 파일을 만들어서 실행 컨테이너를 정의한다.
+- 참고링크 : [Docker Compose로 MySQL/MariaDB 세팅하기](https://int-i.github.io/sql/2020-12-31/mysql-docker-compose)
+
+### docker-compose.yml
+```yml
+# 파일 규격 버전
+version: "3"
+
+# 이 항목 밑에 실행하려는 컨테이너를 정의
+services:
+  db: # 서비스 명
+    image: mysql:ttasjwi # 사용할 이미지
+    container_name: mysql # 컨테이너 이름 설정
+    ports: # 접근 포트 설정 (여러개 설정 가능, 컨테이너 외부:컨테이너 내부)
+      - 3306:3306
+    env_file: .env # .env 파일을 읽고 설정으로 사용함
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes: # 볼륨 (디렉토리 마운트 설정 호스트:컨테이너)
+      - ./mysql/data:/var/lib/mysql # data
+      - ./mysql/conf:/etc/mysql/conf.d # conf
+      - ./mysql/initdb:/docker-entrypoint-initdb.d
+
+```
+- 본래 conf.d 하위에 정의한 cnf 파일을 읽어다 mysql에서 부가적으로 사용하는데 여기서 한 10시간 넘게 삽질했다. 이 부분은 내가 실행했을 때 제대로 먹지 않았다.
+- ports는 여러개 지정할 수 있다.
+  - MySQL의 기본 포트는 3306이다.
+  - MySQL 서버로 사용하려면 컨테이너 내부 포트는 3306을 지정하고 이것을 호스트의 포트(컨테이너 외부포트)로 연결하면 된다.
+- command에서 위의 utf8mb4 characterSet과 utf8mb4_unicode_ci 콜레이션을 적용했다.
+    - MySQL 8.0 이후부터는 기본 characterSet이 utf8mb4다.
+    - 기본 collation은 `utf8mb4_0900_ai_ci`인데 이 collation은 동아시아권 문자열(한글 포함)에 대한 정렬에서 일부 문자들이 동일한 글자로 인식되는 등 문제가 많다. `utf8mb4_unicode_ci`를 사용하는 것을 권장한다.
+    - 참조링크 : [MySQL 8.0.1 utf8mb4_0900_ai_ci의 한글 사용에 대한 문제점](https://rastalion.me/mysql-8-0-1-%EB%B2%84%EC%A0%84%EB%B6%80%ED%84%B0-%EC%B1%84%ED%83%9D%EB%90%9C-utf8mb4_0900_ai_ci%EC%9D%98-%ED%95%9C%EA%B8%80-%EC%82%AC%EC%9A%A9%EC%97%90-%EB%8C%80%ED%95%9C-%EB%AC%B8%EC%A0%9C%EC%A0%90/)
+- volumes를 지정해야, 이후 컨테이너를 내리고 다시 만들어도 db 파일, conf 등을 공유한다. 
+
+### .env(환경변수)
+```env
+TZ=Asia/Seeoul
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_ROOT_PASSWORD=패스워드
+```
+- `environment` 옵션으로 사용해도 되는데, 별도로 외부 파일을 읽고 설정으로 사용하도록 할 수 있다.
+
+### docker 컨테이너 실행
+```shell
+# docker-compose.yml 파일에 있는 디렉토리에서
+docker-compose up -d
+```
+- `-d` : 백그라운드 실행
+
+---
