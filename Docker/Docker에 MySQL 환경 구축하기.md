@@ -122,3 +122,11 @@ docker-compose up -d
 - `-d` : 백그라운드 실행
 
 ---
+
+## 4. Docker 명령으로 MySQL 컨테이너에 Bash로 접속
+
+### 컨테이너의 bash명령어 실행
+```shell
+docker exec -it [컨테이너명] bash
+```
+- 앞에서 생성한 컨테이너를 대화형 명령으로 bash로 접속함.
