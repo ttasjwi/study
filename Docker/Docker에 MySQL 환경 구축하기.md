@@ -130,3 +130,51 @@ docker-compose up -d
 docker exec -it [컨테이너명] bash
 ```
 - 앞에서 생성한 컨테이너를 대화형 명령으로 bash로 접속함.
+
+---
+
+## 5. MySQL 사용자 생성 및 권한 부여
+
+### 루트 접속
+```shell
+mysql -u root -p
+## 비밀번호 입력
+```
+
+### 사용자 생성
+```mysql
+CREATE user '이름'@'호스트'
+IDENTIFIED BY '패스워드';
+```
+- 사용자 생성 시에는 여러가지 옵션을 사용해야하는데 이 부분을 서술하기엔 현재 학습 수준에서 범위를 벗어나므로 생략
+- 주의점
+    - MySQL은 사용자의 계정 뿐 아니라 접속 지점(호스트명 또는 도메인 또는 ip 주소)도 계정의 일부로 취급한다.
+    - 사용자에 특정 호스트만 등록되어 있으면 다른 컴퓨터에서는 접속 불가능
+    - 호스트에 `%`가 지정되어 있으면 모든 접속 지점(호스트명 또는 도메인 또는 ip 주소)에서 접속 가능
+    - 서로 동일한 id에 대해 다른 호스트로 여러개가 등록되어 있을 경우 좁은 범위를 우선시하여 선택 후 식별
+        - 다른 패스워드가 부여될 경우 좁은 범위를 우선시하여 인증을 적용함.
+
+
+### 권한 부여
+```mysql
+GRANT ALL ON *.* TO '사용자이름'@'호스트';
+FLUSH PRIVILEGES;
+```
+- 글로벌 수준에서 가능한 모든 권한 및 모든 DB에 대한 객체 권한을 부여
+
+### 실행결과
+<details>
+<summary>접기/펼치기</summary>
+<div markdown="1">
+
+![ROOT_LOGIN.png](img/ROOT_LOGIN.png)
+![CREATE_USER.png](img/CREATE_USER.png)
+![GRANT.png](img/GRANT.png)
+![FLUSH_PRIVILEGES.png](img/FLUSH_PRIVILEGES.png)
+- 실제 서비스에서는 비밀번호를 저렇게 짓지도 않을테고, 권한도 저렇게 다 주지는 않을 것이다.
+- MySQL에 익숙하지 않은 상태에서 좀 더 친숙해지기 위해 대충 지었다.
+
+</div>
+</details>
+
+---
